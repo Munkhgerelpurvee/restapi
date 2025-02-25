@@ -1,5 +1,7 @@
 const http = require('http');
 const fs = require('fs');
+const { Utf8 } = require('buffer');
+const { buffer } = require('stream/consumers');
 
 const server = http.createServer((req, res) => {
     const {headers, url, method} = req;
@@ -7,28 +9,76 @@ const server = http.createServer((req, res) => {
     res.setHeader("content-type", "text/html")
 
     if(url === '/') {
-        res.write('<h1>Welcome to our new online shop</h1>');
-        res.write(`<br><br>Login hiihiin tuld <a href="/login">End darna uu</a>`);
-        res.end();
+        fs.readFile('./src/index.html', Utf8, (error, data) => {
+        if(error) {
+            res.statusCode = 500;
+            res.write('<h1>Унших явцад алдаа гарлаа</h1>');
+            res.end();
+            
+        } else {
+            res.statusCode = 200;
+            res.write(data);
+            res.end();
+
+        }
+        })
     } else if(url === '/login') {
+        // login form html butsaana
+        fs.readFile('./src/login.html', Utf8, (error, data) => {
         res.statusCode = 200;
-    // login form html butsaana
-    res.write('<h1>Login hiih</h1>');
-    res.write(`<form action = "logincheck" method = "POST">`);
-    res.write(`<br><br><input type = "text", name = "email"/>`);
-    res.write(`<br><input type = "password", name = "password"/>`);
-    res.write(`<br><input type = "submit", value = "Login"/>`);
-    res.write(`<form/>`);
-    res.end();
+        res.write(data);
+        res.end();
+
+        })
     } else if(url === "/logincheck" && method === "POST") {
+        /*
+         POST method-ийн body хэсэгт өгөгдөл маань явж байдаг.Тиймээс энд POST method-ийн дотор байгаа name, password гэсэн өгөгдлийг энд хэрхэн уншиж авах вэ? Өгөгдлүүдимйг сэрвэр талаас илгээхэд хэсэг хэсгээр илгээдэг. Тэр хэсгийг CHUNK гэж нэрлэдэг. Нийт CHUNK -ууд нь binary өгөгдөл байдаг буюу 0,1 гэсэн data байдлаар ирнэ.Эдгээр CHUNK -уудыг бүгдийг нь цуглуулаад string-руу хөрвүүлэхэд манай нэр болон нууц үг гарна.req.on() --- нь CHUNK ирэх болгонд event үүсэж req.on() функ нь ажиллах ба CHUNK event нь өөрийн гэсэн нэртэй байна. Тэр нэрийг нь data -*гэж нэрлэе. data - ирэх болгонд callBack function дуудагдана.
+
+            req.on('data', () => {})
+                Энэ callBack function-н аргументаар нь ирсэн Chunk орж ирнэ.
+        */
     // login check buyu usename pasword 2-iih huleej avdag neg hayg baih 
-    res.statusCode = 200;
-    res.write('<h1>Login hiij uzlee...</h1>');
-    res.write('<br><h1>' + method + '</h1>');
-    res.end();
+    const body = [];
+    req.on('data', (chunk) => {
+     body.push(chunk)
+    })
+    // Энэ CHUNK хэзээ дуусахыг нь мэддэг тусдаа event-тэй
+    req.on('end', () => {
+       const parsedBody = Buffer.concat(body).toString();
+       const password = parsedBody.split('=')[2];
+       console.log('password ========= ' , password);
+       if(password === 'naraa55') {
+             // Login successfully
+             res.statusCode = 302;
+             res.setHeader("Location", "/home");
+             
+       } else {
+             // Login failed
+             res.statusCode = 302;
+             res.setHeader("Location", "/error");
+            }
+            res.end();
+            //    ирсэн өгөгдлийг файл руу save хийж үзье
+    // fs.writeFileSync('loginInfo.txt', parsedBody);
+    // res.write('Got your name and password');
+    // res.end();
+    })
     
     } else if(url === '/home') {
     // login hiisnii daraa usreh heseg
+    fs.readFile('./src/home.html', Utf8, (error, data) => {
+        res.statusCode = 200;
+        res.write(data);
+        res.end();
+    })
+
+    } else if(url === '/error') {
+        // login hiisnii daraa usreh heseg
+        fs.readFile('./src/error.html', Utf8, (error, data) => {
+            res.statusCode = 200;
+            res.write(data);
+            res.end();
+        })
     } else {
       res.statusCode = 404;
       res.write('<h1>404 not found</h1>');
