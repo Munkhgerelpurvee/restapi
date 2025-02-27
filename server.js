@@ -1,7 +1,8 @@
 const http = require('http');
 const fs = require('fs');
-const { Utf8 } = require('buffer');
-const { buffer } = require('stream/consumers');
+const urlLib = require('url');
+const path = require('path');
+const { error } = require('console');
 
 const server = http.createServer((req, res) => {
     const {headers, url, method} = req;
@@ -9,7 +10,7 @@ const server = http.createServer((req, res) => {
     res.setHeader("content-type", "text/html")
 
     if(url === '/') {
-        fs.readFile('./src/index.html', Utf8, (error, data) => {
+        fs.readFile('./src/index.html', "utf8", (error, data) => {
         if(error) {
             res.statusCode = 500;
             res.write('<h1>Унших явцад алдаа гарлаа</h1>');
@@ -24,7 +25,7 @@ const server = http.createServer((req, res) => {
         })
     } else if(url === '/login') {
         // login form html butsaana
-        fs.readFile('./src/login.html', Utf8, (error, data) => {
+        fs.readFile('./src/login.html', "utf8", (error, data) => {
         res.statusCode = 200;
         res.write(data);
         res.end();
@@ -66,7 +67,7 @@ const server = http.createServer((req, res) => {
     
     } else if(url === '/home') {
     // login hiisnii daraa usreh heseg
-    fs.readFile('./src/home.html', Utf8, (error, data) => {
+    fs.readFile('./src/home.html', "utf8", (error, data) => {
         res.statusCode = 200;
         res.write(data);
         res.end();
@@ -74,14 +75,44 @@ const server = http.createServer((req, res) => {
 
     } else if(url === '/error') {
         // login hiisnii daraa usreh heseg
-        fs.readFile('./src/error.html', Utf8, (error, data) => {
+        fs.readFile('./src/error.html', "utf8", (error, data) => {
             res.statusCode = 200;
             res.write(data);
             res.end();
         })
-    } else {
+    }
+    else if (url.endsWith(".jpg") || url.endsWith(".png") ) {
+        /*
+        энэ тохиолдолд файлын нэрийг амархан уншиж авах арга нь nodejs-йин core library-д байдаг url and path -нь ийм string './src/img/cat.jpg' ---- орж ирвэл эндээс файлын нэрийг нь олох болон эсвэл манай төсөл яг диск дээр хаана байрлаж буй зэрэг ерөнхий фолдерыг нь олох зэрэгт ашигладаг. Эдгээрийг ашиглан дамжуулсан зурагны нэрийг гаргаж авна.
+        */
+       const parsed = urlLib.parse(url);
+       const fileName = path.basename(parsed.pathname);
+       console.log('-------------->', fileName);
+       fs.readFile('./src/img/' +fileName, (error, data) => {
+        res.statusCode = 200;
+        res.setHeader("content-type", "image/jpg");
+        res.end(data);
+       });
+
+    }
+    // } else if(url === '/src/img/cat.jpg') {
+    //     // Нийт 10 зураг орж ирвэл зураг болгон дээр ингэж оруулж ирнэ гэсэн үг тиймээс энэ нь маш хүндрэлтэй тул өөр аргаар хийж үзье.
+    //     fs.readFile('./src/img/cat.jpg', (error, data) => {
+    //         if (error) {
+    //             res.statusCode = 500;
+    //             res.write('<h1>Зураг уншихад алдаа гарлаа</h1>');
+    //         } else {
+    //             res.statusCode = 200;
+    //             res.setHeader("content-type", "image/jpg")
+    //             res.write(data);
+    //         }
+    //         res.end();
+    //     });
+  
+     else {
       res.statusCode = 404;
       res.write('<h1>404 not found</h1>');
+      console.log("======NOT FOUND======>", url);
       res.end();
     }
 
