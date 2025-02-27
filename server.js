@@ -94,6 +94,40 @@ const server = http.createServer((req, res) => {
         res.end(data);
        });
 
+    } else if (url.endsWith(".pdf")) {
+        const parsed = urlLib.parse(url);
+        const fileName = path.basename(parsed.pathname);
+        console.log('-------------->', fileName);
+        fs.readFile('./src/pdf/' +fileName, (error, data) => {
+         res.statusCode = 200;
+         res.setHeader("content-type", "application/pdf");
+        //  https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
+         res.end(data);
+        });
+ 
+
+    } else if (url.endsWith(".css")) {
+        const parsed = urlLib.parse(url);
+        const fileName = path.basename(parsed.pathname);
+        console.log('-------------->', fileName);
+        fs.readFile('./src/css/' +fileName, (error, data) => {
+         res.statusCode = 200;
+         res.setHeader("content-type", "text/css");
+        //  https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
+         res.end(data);
+        });
+
+    } else if (url.endsWith(".js")) {
+        const parsed = urlLib.parse(url);
+        const fileName = path.basename(parsed.pathname);
+        console.log('-------------->', fileName);
+        fs.readFile('./src/js/' +fileName, (error, data) => {
+         res.statusCode = 200;
+         res.setHeader("content-type", "	text/javascript");
+        //  https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
+         res.end(data);
+        });
+
     }
     // } else if(url === '/src/img/cat.jpg') {
     //     // Нийт 10 зураг орж ирвэл зураг болгон дээр ингэж оруулж ирнэ гэсэн үг тиймээс энэ нь маш хүндрэлтэй тул өөр аргаар хийж үзье.
